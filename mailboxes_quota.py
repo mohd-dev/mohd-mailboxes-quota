@@ -14,9 +14,10 @@ import shlex
 import sys
 import typing
 
+from constants import APP_NAME, VERSION
+
 from keepassx.db import Database
 
-from constants import APP_NAME, VERSION
 
 def get_mailbox_quota(server: str,
                       port: int,
@@ -25,6 +26,16 @@ def get_mailbox_quota(server: str,
                       username: str,
                       password: str
                       ) -> typing.Tuple[int, int]:
+    """
+    Get mailbox quota
+    :param server: IMAP server
+    :param port: IMAP port
+    :param use_ssl: specifies whether to use SSL for IMAP connection
+    :param root_dir: root directory
+    :param username: mailbox username
+    :param password: mailbox password
+    :return: a tuple with used size and total size
+    """
     mailbox = (imaplib.IMAP4_SSL(server, port)
                if use_ssl
                else imaplib.IMAP4(server, port))
@@ -103,9 +114,8 @@ if __name__ == '__main__':
     else:
         # No key needed
         key_file_content = None
-    # Profile information
+    # Process results
     if True:
-        # Prepare CSV writer
         # Get passwords from database
         with open(arguments.database, 'rb') as file_database:
             database = Database(contents=file_database.read(),
@@ -138,8 +148,6 @@ if __name__ == '__main__':
                                 'total': quota[1] // 1000,
                                 'used': quota[0] // 1000,
                                 'percent': quota[0] / quota[1] * 100})
-            # Show results
-            print('\r', end='')
             # Get max title and username length
             max_title = max([len(item['title']) for item in results])
             max_username = max([len(item['username']) for item in results])
@@ -148,6 +156,8 @@ if __name__ == '__main__':
                           '  {{:>5d}} / {{:<5d}}'
                           '  {{:>5.2f}}%'
                           ' {{}}').format(max_title, max_username)
+            # Show results
+            print('\r', end='')
             for entry in sorted(results,
                                 key=operator.itemgetter('percent'),
                                 reverse=True):
