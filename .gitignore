@@ -1,0 +1,8 @@
+# JetBrains project
+/.idea/
+# Environment files
+*.env
+# Python bytecode files
+__pycache__/
+*.pyc
+
