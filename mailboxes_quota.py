@@ -78,6 +78,11 @@ if __name__ == '__main__':
                        '--root',
                        default='INBOX',
                        help='Mail server root')
+    group = parser.add_argument_group(title='Output options')
+    group.add_argument('-o',
+                       '--output',
+                       default='-',
+                       help='Output for results (use - for stdout)')
     group = parser.add_argument_group(title='KeePassX database options')
     group.add_argument('-d',
                        '--database',
@@ -155,19 +160,26 @@ if __name__ == '__main__':
                           '  {{:{:d}s}}'
                           '  {{:>5d}} / {{:<5d}}'
                           '  {{:>5.2f}}%'
-                          ' {{}}').format(max_title, max_username)
+                          ' {{}}\n').format(max_title, max_username)
+            # Set output file for results
+            if arguments.output == '-':
+                file_output = sys.stdout
+            else:
+                file_output = open(arguments.output, 'w')
             # Show results
             print('\r', end='')
             for entry in sorted(results,
                                 key=operator.itemgetter('percent'),
                                 reverse=True):
-                print(str_format.format(
-                    entry['title'],
-                    entry['username'],
-                    entry['used'],
-                    entry['total'],
-                    entry['percent'],
-                    'Warning' if entry['percent'] >= 80 else ''))
+                file_output.write(str_format.format(
+                                  entry['title'],
+                                  entry['username'],
+                                  entry['used'],
+                                  entry['total'],
+                                  entry['percent'],
+                                  'Warning' if entry['percent'] >= 80 else ''))
+            # Close output
+            file_output.close()
         else:
             # Passwords group not found
             print('Group "{GROUP}" not found'.format(
