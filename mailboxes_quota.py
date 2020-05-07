@@ -7,6 +7,7 @@
 ##
 
 import argparse
+import csv
 import getpass
 import imaplib
 import operator
@@ -87,6 +88,11 @@ def parse_arguments() -> argparse.Namespace:
                        '--output',
                        default='-',
                        help="Output for results (use - for stdout)")
+    group.add_argument('-f',
+                       '--format',
+                       choices=('text', 'csv'),
+                       default='text',
+                       help="Output format for results")
     group.add_argument('-q',
                        '--quiet',
                        action='store_true',
@@ -179,20 +185,40 @@ if __name__ == '__main__':
             if arguments.output == '-':
                 file_output = sys.stdout
             else:
-                file_output = open(arguments.output, 'w')
+                file_output = open(arguments.output,
+                                   mode='w',
+                                   newline='\n',
+                                   encoding='utf-8')
+            # Set output format for results
+            if arguments.format == 'csv':
+                csv_writer = csv.writer(file_output,
+                                        delimiter=';',
+                                        quotechar='"',
+                                        quoting=csv.QUOTE_NONNUMERIC)
+                csv_writer.writerow(('Title',
+                                     'Username',
+                                     'Used space',
+                                     'Total space',
+                                     'User percent',
+                                     'Info'))
+            else:
+                csv_writer = None
             # Show results
             if not arguments.quiet:
                 sys.stderr.write('\r')
             for entry in sorted(results,
                                 key=operator.itemgetter('percent'),
                                 reverse=True):
-                file_output.write(str_format.format(
-                                  entry['title'],
-                                  entry['username'],
-                                  entry['used'],
-                                  entry['total'],
-                                  entry['percent'],
-                                  'Warning' if entry['percent'] >= 80 else ''))
+                ouput_arguments = (entry['title'],
+                                   entry['username'],
+                                   entry['used'],
+                                   entry['total'],
+                                   round(entry['percent'], 2),
+                                   'Warning' if entry['percent'] >= 80 else '')
+                if arguments.format == 'csv':
+                    csv_writer.writerow(ouput_arguments)
+                else:
+                    file_output.write(str_format.format(*ouput_arguments))
             # Close output
             file_output.close()
         else:
