@@ -12,6 +12,7 @@ import getpass
 import imaplib
 import operator
 import shlex
+import socket
 import sys
 import typing
 
@@ -37,25 +38,30 @@ def get_mailbox_quota(server: str,
     :param password: mailbox password
     :return: a tuple with used size and total size
     """
-    mailbox = (imaplib.IMAP4_SSL(server, port)
-               if use_ssl
-               else imaplib.IMAP4(server, port))
-    mailbox.login(username, password)
-    # Format: b'"User quota" (STORAGE X Y)'
-    quota_str = (mailbox.getquotaroot(root_dir)[1][1][0]
-                 # Remove parenthesis
-                 .translate(None, b'()')
-                 # Convert to string
-                 .decode('utf-8'))
-    # Split preserving quotes
-    items = shlex.split(quota_str, ' ')
-    # Get results
-    results = None
-    if items and items[0] == 'User quota':
-        # Calculate quota
-        used_size = int(items[-2])
-        total_size = int(items[-1])
-        results = (used_size, total_size)
+    try:
+        mailbox = (imaplib.IMAP4_SSL(server, port)
+                   if use_ssl
+                   else imaplib.IMAP4(server, port))
+        mailbox.login(username, password)
+        # Format: b'"User quota" (STORAGE X Y)'
+        quota_str = (mailbox.getquotaroot(root_dir)[1][1][0]
+                     # Remove parenthesis
+                     .translate(None, b'()')
+                     # Convert to string
+                     .decode('utf-8'))
+        # Split preserving quotes
+        items = shlex.split(quota_str, ' ')
+        # Get results
+        results = None
+        if items and items[0] == 'User quota':
+            # Calculate quota
+            used_size = int(items[-2])
+            total_size = int(items[-1])
+            results = (used_size, total_size)
+    except socket.timeout:
+        sys.stderr.write('ERR: Timeout during connection '
+                         'for {username}\n'.format(username=username))
+        results = None
     return results
 
 
@@ -86,6 +92,11 @@ def parse_arguments() -> argparse.Namespace:
                        type=str,
                        default='INBOX',
                        help="Mail server root")
+    group.add_argument('-T',
+                       '--timeout',
+                       type=float,
+                       default=10.0,
+                       help="Connection timeout in seconds")
     group = parser.add_argument_group(title='Output options')
     group.add_argument('-o',
                        '--output',
@@ -165,8 +176,13 @@ if __name__ == '__main__':
                        if entry.group is selected_group[0]
                        and entry.username
                        and entry.password]
+            # Set socket and IMAP timeout
+            socket.setdefaulttimeout(arguments.timeout)
             results = []
             for index, entry in enumerate(entries):
+                if not arguments.quiet:
+                    sys.stderr.write('{:>3d}/{:d} {:50s}\n'.format(
+                        index + 1, len(entries), entry.title))
                 # Process each entry and show progress on stderr
                 quota = get_mailbox_quota(arguments.server,
                                           arguments.port,
@@ -174,17 +190,21 @@ if __name__ == '__main__':
                                           arguments.root,
                                           entry.username,
                                           entry.password)
-                if not arguments.quiet:
-                    sys.stderr.write('{:>3d}/{:d} {:50s}\n'.format(
-                          index + 1, len(entries), entry.title))
-                results.append({'title': entry.title,
-                                'username': entry.username,
-                                'total': quota[1] // 1000,
-                                'used': quota[0] // 1000,
-                                'percent': quota[0] / quota[1] * 100})
+                # Check if quota was obtained
+                if quota:
+                    results.append({'title': entry.title,
+                                    'username': entry.username,
+                                    'total': quota[1] // 1000,
+                                    'used': quota[0] // 1000,
+                                    'percent': quota[0] / quota[1] * 100})
             # Get max title and username length
-            max_title = max([len(item['title']) for item in results])
-            max_username = max([len(item['username']) for item in results])
+            if results:
+                max_title = max([len(item['title']) for item in results])
+                max_username = max([len(item['username']) for item in results])
+            else:
+                # No results
+                max_title = 0
+                max_username = 0
             str_format = ('{{:{:d}s}}'
                           '  {{:{:d}s}}'
                           '  {{:>5d}} / {{:<5d}}'
