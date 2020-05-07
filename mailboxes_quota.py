@@ -163,7 +163,7 @@ if __name__ == '__main__':
             entries = [entry
                        for entry in database.entries
                        if entry.group is selected_group[0]
-                       and entry.username.endswith('@mohd.it')
+                       and entry.username
                        and entry.password]
             results = []
             for index, entry in enumerate(entries):
