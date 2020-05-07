@@ -152,7 +152,7 @@ if __name__ == '__main__':
                        and entry.password]
             results = []
             for index, entry in enumerate(entries):
-                # Process each entry and show progress
+                # Process each entry and show progress on stderr
                 quota = get_mailbox_quota(arguments.server,
                                           arguments.port,
                                           arguments.ssl,
@@ -160,9 +160,8 @@ if __name__ == '__main__':
                                           entry.username,
                                           entry.password)
                 if not arguments.quiet:
-                    print('\r{:>3d}/{:d} {:50s}'.format(
-                          index + 1, len(entries), entry.title),
-                          end='', flush=True)
+                    sys.stderr.write('\r{:>3d}/{:d} {:50s}'.format(
+                          index + 1, len(entries), entry.title))
                 results.append({'title': entry.title,
                                 'username': entry.username,
                                 'total': quota[1] // 1000,
@@ -183,7 +182,7 @@ if __name__ == '__main__':
                 file_output = open(arguments.output, 'w')
             # Show results
             if not arguments.quiet:
-                print('\r', end='')
+                sys.stderr.write('\r')
             for entry in sorted(results,
                                 key=operator.itemgetter('percent'),
                                 reverse=True):
