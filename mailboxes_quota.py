@@ -68,10 +68,12 @@ def parse_arguments() -> argparse.Namespace:
     group = parser.add_argument_group(title="Mail server options")
     group.add_argument('-s',
                        '--server',
+                       type=str,
                        required=True,
                        help="Mail server address")
     group.add_argument('-p',
                        '--port',
+                       type=int,
                        required=True,
                        help="Mail server port")
     group.add_argument('-S',
@@ -81,15 +83,18 @@ def parse_arguments() -> argparse.Namespace:
                        help="Mail server SSL usage")
     group.add_argument('-R',
                        '--root',
+                       type=str,
                        default='INBOX',
                        help="Mail server root")
     group = parser.add_argument_group(title='Output options')
     group.add_argument('-o',
                        '--output',
+                       type=str,
                        default='-',
                        help="Output for results (use - for stdout)")
     group.add_argument('-f',
                        '--format',
+                       type=str,
                        choices=('text', 'csv'),
                        default='text',
                        help="Output format for results")
@@ -101,18 +106,22 @@ def parse_arguments() -> argparse.Namespace:
     group = parser.add_argument_group(title="KeePassX database options")
     group.add_argument('-d',
                        '--database',
+                       type=str,
                        required=True,
                        help="KeePassX database file path")
     group.add_argument('-g',
                        '--group',
+                       type=str,
                        required=True,
                        help="KeePassX group name")
     group.add_argument('-P',
                        '--password',
+                       type=str,
                        required=False,
                        help="KeePassX database password")
     group.add_argument('-k',
                        '--key',
+                       type=str,
                        required=False,
                        help='KeePassX key file path')
     group = parser.add_argument_group(title="Optional arguments")
