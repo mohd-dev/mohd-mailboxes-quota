@@ -87,6 +87,11 @@ def parse_arguments() -> argparse.Namespace:
                        '--output',
                        default='-',
                        help="Output for results (use - for stdout)")
+    group.add_argument('-q',
+                       '--quiet',
+                       action='store_true',
+                       default=False,
+                       help="Don't show messages about progress loading")
     group = parser.add_argument_group(title="KeePassX database options")
     group.add_argument('-d',
                        '--database',
@@ -154,9 +159,10 @@ if __name__ == '__main__':
                                           arguments.root,
                                           entry.username,
                                           entry.password)
-                print('\r{:>3d}/{:d} {:50s}'.format(
-                      index + 1, len(entries), entry.title),
-                      end='', flush=True)
+                if not arguments.quiet:
+                    print('\r{:>3d}/{:d} {:50s}'.format(
+                          index + 1, len(entries), entry.title),
+                          end='', flush=True)
                 results.append({'title': entry.title,
                                 'username': entry.username,
                                 'total': quota[1] // 1000,
@@ -176,7 +182,8 @@ if __name__ == '__main__':
             else:
                 file_output = open(arguments.output, 'w')
             # Show results
-            print('\r', end='')
+            if not arguments.quiet:
+                print('\r', end='')
             for entry in sorted(results,
                                 key=operator.itemgetter('percent'),
                                 reverse=True):
