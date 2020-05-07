@@ -57,56 +57,65 @@ def get_mailbox_quota(server: str,
         results = (used_size, total_size)
     return results
 
-if __name__ == '__main__':
-    # Command line arguments
+
+def parse_arguments() -> argparse.Namespace:
+    """
+    Parse command line arguments and return the options
+    :return: a Namespace object with the arguments from argparse
+    """
     parser = argparse.ArgumentParser()
-    group = parser.add_argument_group(title='Mail server options')
+    group = parser.add_argument_group(title="Mail server options")
     group.add_argument('-s',
                        '--server',
                        required=True,
-                       help='Mail server address')
+                       help="Mail server address")
     group.add_argument('-p',
                        '--port',
                        required=True,
-                       help='Mail server port')
+                       help="Mail server port")
     group.add_argument('-S',
                        '--ssl',
                        action='store_true',
                        default=False,
-                       help='Mail server SSL usage')
+                       help="Mail server SSL usage")
     group.add_argument('-R',
                        '--root',
                        default='INBOX',
-                       help='Mail server root')
+                       help="Mail server root")
     group = parser.add_argument_group(title='Output options')
     group.add_argument('-o',
                        '--output',
                        default='-',
-                       help='Output for results (use - for stdout)')
-    group = parser.add_argument_group(title='KeePassX database options')
+                       help="Output for results (use - for stdout)")
+    group = parser.add_argument_group(title="KeePassX database options")
     group.add_argument('-d',
                        '--database',
                        required=True,
-                       help='KeePassX database file path')
+                       help="KeePassX database file path")
     group.add_argument('-g',
                        '--group',
                        required=True,
-                       help='KeePassX group name')
+                       help="KeePassX group name")
     group.add_argument('-P',
                        '--password',
                        required=False,
-                       help='KeePassX database password')
+                       help="KeePassX database password")
     group.add_argument('-k',
                        '--key',
                        required=False,
                        help='KeePassX key file path')
-    group = parser.add_argument_group(title='Optional arguments')
+    group = parser.add_argument_group(title="Optional arguments")
     group.add_argument('-V',
                        '--version',
                        action='version',
-                       version='{PROGRAM} {VERSION}'.format(PROGRAM=APP_NAME,
+                       version="{PROGRAM} {VERSION}".format(PROGRAM=APP_NAME,
                                                             VERSION=VERSION))
-    arguments = parser.parse_args()
+    return parser.parse_args()
+
+
+if __name__ == '__main__':
+    # Command line arguments
+    arguments = parse_arguments()
     # Get password argument from command line
     if arguments.password == '-':
         arguments.password = getpass.getpass(
