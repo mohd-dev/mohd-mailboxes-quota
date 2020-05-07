@@ -175,7 +175,7 @@ if __name__ == '__main__':
                                           entry.username,
                                           entry.password)
                 if not arguments.quiet:
-                    sys.stderr.write('\r{:>3d}/{:d} {:50s}'.format(
+                    sys.stderr.write('{:>3d}/{:d} {:50s}\n'.format(
                           index + 1, len(entries), entry.title))
                 results.append({'title': entry.title,
                                 'username': entry.username,
@@ -213,8 +213,6 @@ if __name__ == '__main__':
             else:
                 csv_writer = None
             # Show results
-            if not arguments.quiet:
-                sys.stderr.write('\r')
             for entry in sorted(results,
                                 key=operator.itemgetter('percent'),
                                 reverse=True):
