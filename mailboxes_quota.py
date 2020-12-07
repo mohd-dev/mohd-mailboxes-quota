@@ -62,6 +62,10 @@ def get_mailbox_quota(server: str,
         sys.stderr.write('ERR: Timeout during connection '
                          'for {username}\n'.format(username=username))
         results = None
+    except imaplib.IMAP4.error:
+        sys.stderr.write('ERR: Authentication failed '
+                         'for {username}\n'.format(username=username))
+        results = None
     return results
 
 
