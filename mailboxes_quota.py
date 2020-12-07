@@ -201,6 +201,12 @@ if __name__ == '__main__':
                                     'total': quota[1] // 1000,
                                     'used': quota[0] // 1000,
                                     'percent': quota[0] / quota[1] * 100})
+                else:
+                    results.append({'title': entry.title,
+                                    'username': entry.username,
+                                    'total': -1,
+                                    'used': -1,
+                                    'percent': -100})
             # Get max title and username length
             if results:
                 max_title = max([len(item['title']) for item in results])
@@ -240,12 +246,19 @@ if __name__ == '__main__':
             for entry in sorted(results,
                                 key=operator.itemgetter('percent'),
                                 reverse=True):
+                # Get status info
+                if entry['percent'] >= 80:
+                    info = 'Warning'
+                elif entry['percent'] < 0:
+                    info = 'Error'
+                else:
+                    info = ''
                 ouput_arguments = (entry['title'],
                                    entry['username'],
                                    entry['used'],
                                    entry['total'],
                                    round(entry['percent'], 2),
-                                   'Warning' if entry['percent'] >= 80 else '')
+                                   info)
                 if arguments.format == 'csv':
                     csv_writer.writerow(ouput_arguments)
                 else:
